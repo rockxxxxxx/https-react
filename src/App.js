@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useCallback, useEffect } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
@@ -6,7 +6,7 @@ import "./App.css";
 function App() {
   const [movies, setMovies] = useState([]);
   const [loader,setLoader] = useState(true)
-  async function fetchData() {
+  const  fetchData=useCallback(async ()=> {
     const response = await fetch("https://swapi.dev/api/films")
       const data = await response.json()
       
@@ -22,7 +22,11 @@ function App() {
         setMovies(transfornedData);
         setLoader(false)
   
-  }
+  },[]);
+
+  useEffect(()=>{
+    fetchData();
+  },[fetchData])
 
   return (
     <React.Fragment>
