@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from "react";
 
 import MoviesList from "./components/MoviesList";
 import "./App.css";
+import AddMovie from "./components/AddMovie";
 
 function App() {
   const [movies, setMovies] = useState([]);
@@ -12,21 +13,24 @@ function App() {
     setLoader(true);
     setError(null);
     try {
-      const response = await fetch("https://swapi.dev/api/film");
+      const response = await fetch(
+        "https://snap-battle-ae7cc-default-rtdb.firebaseio.com/movies.json"
+      );
       if (!response.ok) {
         throw new Error("Some thing went wrong...Retrying");
       }
       const data = await response.json();
+      const loadedData = [];
+      for (const key in data) {
+        loadedData.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate,
+        });
+      }
 
-      const transfornedData = data.results.map((movieData) => {
-        return {
-          id: movieData.episode_id,
-          title: movieData.title,
-          openingText: movieData.opening_crawl,
-          releaseDate: movieData.release_date,
-        };
-      });
-      setMovies(transfornedData);
+      setMovies(loadedData);
     } catch (error) {
       setError(error.message);
       const time = setTimeout(() => {
@@ -46,8 +50,27 @@ function App() {
     clearTimeout(data);
   }
 
+  function addMovieHandler(movie) {
+    fetch("https://snap-battle-ae7cc-default-rtdb.firebaseio.com/movies.json", {
+      method: "POST",
+      body: JSON.stringify(movie),
+    }).then(fetchData);
+  }
+
+  function onDeleteHandler(id) {
+    fetch(
+      `https://snap-battle-ae7cc-default-rtdb.firebaseio.com/movies/${id}.json`,
+      {
+        method: "DELETE",
+      }
+    ).then(fetchData());
+  }
+
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
       <section>
         <button onClick={fetchData}>Fetch Movies</button>
       </section>
@@ -61,7 +84,7 @@ function App() {
             </button>
           </div>
         )}
-        <MoviesList movies={movies} />
+        <MoviesList movies={movies} deleteHandler={onDeleteHandler} />
       </section>
     </React.Fragment>
   );
